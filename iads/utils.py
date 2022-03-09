@@ -98,99 +98,33 @@ def suppN_sharedmostcommon(n, e1, e2) :
         
     return e1, e2
     
-# Fonction permettant de conserver uniquement les mots du dictionnaire
-
-# ------------------------ 
-# Fonctions mises en place lors de l'UE LU3IN026 (Data Science)
-
-# code de la validation croisée
-def crossval(X, Y, n_iterations, iteration):
+# Fonction permettant de réaliser des tests rapidement
+def quickTest(X, Y) :
+    # Liste de resultats
+    resultSVM = []
+    resultNB = []
+    resultLR = []
     
-    # On itere sur n_iterations
-    for k in range(0, n_iterations) :
-        
-        # Repartition et indice
-        rep = 1/n_iterations # Répartition = ppurcentage valeurs envoyées en apprentissage
-        effRep = (int)(len(X) * rep)
-        
-        # Création des indices de test
-        indexTest = np.asarray([(i + k * effRep) for i in range(effRep)])
-        
-        # Création des indices d'apprentissage
-        indexApp = list()
-        for i in range(len(X)) :
-            if (i not in indexTest) :
-                indexApp.append(i)
-        indexApp = np.array(indexApp)
-        
-        # Xapp
-        Xapp = X[indexApp]
-        
-        # Yapp
-        Yapp = Y[indexApp]
-        
-        # Xtest
-        Xtest = X[indexTest]
-        
-        # Ytest
-        Ytest = Y[indexTest]
-        
-        if (k == iteration) :
-            # Si il s'agit de l'itération souhaitée, on renvoie les données
-            break
-    
-    # On retourne les données
-    return Xapp, Yapp, Xtest, Ytest
-
-# Code de la validation croisée stratifiée
-def crossval_strat(X, Y, n_iterations, iteration):
-    
-    # On itere sur n_iterations
-    for k in range(0, n_iterations) :
-        
-        # Repartition et indice
-        midEff = (int)(len(X) / 2) # Marche mieux lorsque la taille des données est paire
-        repEff = (int)(midEff / n_iterations)
-        
-        # Création des index de test
-        indexTest1 = np.asarray([i for i in range(repEff * k, repEff * (k + 1))])
-        indexTest2 = np.asarray([(i + midEff) for i in range(repEff * k, repEff * (k + 1))])
-        
-        # Création des index d'apprentissage
-        indexApp1 = list()
-        indexApp2 = list()
-         
-        for i in range(0, len(X)) :
-            if (i < midEff) :
-                if (i not in indexTest1) :
-                    indexApp1.append(i)
-            else :
-                if (i not in indexTest2) :
-                    indexApp2.append(i)
+    for i in [5, 10] :
+        for j in [False, True] :
+            for m in range(3) :
+                if (m == 0) : # SVC
+                    svc = LinearSVC(max_iter=1000)
+                    kfold = KFold(n_splits=i, shuffle=j)
+                    scores_cv = cross_val_score(svc, Xpres, Ypres, cv=kfold)
+                    resultSVM.append(1 - statistics.mean(scores_cv))
                     
-        indexApp1 = np.array(indexApp1)
-        indexApp2 = np.array(indexApp2)
-        
-        # Concaténation des indices
-        indexApp = np.concatenate((indexApp1, indexApp2))
-        indexTest = np.concatenate((indexTest1, indexTest2))
-        
-        
-        # Xapp
-        Xapp = X[indexApp]
-        
-        # Yapp
-        Yapp = Y[indexApp]
-        
-        # Xtest
-        Xtest = X[indexTest]
-        
-        # Ytest
-        Ytest = Y[indexTest]
-        
-        if (k == iteration) :
-            # Si il s'agit de l'itération souhaitée, on renvoie les données
-            break
-    
-    # On retourne les données
-    return Xapp, Yapp, Xtest, Ytest
+                if (m == 1) : # NB
+                    clf = MultinomialNB()
+                    kfold = KFold(n_splits=i, shuffle=j)
+                    scores_cv = cross_val_score(clf, Xpres, Ypres, cv=kfold)
+                    resultNB.append(1 - statistics.mean(scores_cv))
+                    
+                if (m == 2) : # LR
+                    lin = LogisticRegression(max_iter=1000)
+                    kfold = KFold(n_splits=i, shuffle=j)
+                    scores_cv = cross_val_score(lin, Xpres, Ypres, cv=kfold)
+                    resultLR.append(1 - statistics.mean(scores_cv))
+                    
+                
+    return resultSVM, resultNB, resultLR
