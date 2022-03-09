@@ -42,12 +42,13 @@ def load_pres_test(fname):
     return alltxts,alllabs
 
 # Fonctions de nettoyage en mise en place des données
-def transform(text, punc=False, accentMaj=False, nb=False, stopW=False) :
+def transform(text, punc=False, accentMaj=False, nb=False, stopW=False, base=stopwords.words('french')) :
     text_transf = text
     
     for i in range(len(text)) :
         # Affichage de la ligne
-        print(str(i) + " / " + str(len(text)), end='\r')
+        if (i % 100 == 0) :
+            print(str(i) + " / " + str(len(text)), end='\r')
         
         # Suppression de la ponctuation
         if punc:
@@ -66,13 +67,6 @@ def transform(text, punc=False, accentMaj=False, nb=False, stopW=False) :
             
         # Suppression des stopwords avec une langue précise
         if stopW :
-            tmp = text_transf[i].split()
-            tmp2 = []
-            
-            for w in tmp :
-                if w not in stopwords.words('french') :
-                    tmp2.append(w)
-                    
-            text_transf[i] = ' '.join(tmp2)
+            text_transf[i] = ' '.join([word for word in text_transf[i].split() if word not in base])
             
     return text_transf
